@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Medicine Details</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 60%;
+            margin: auto;
+            overflow: hidden;
+            padding: 20px;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            margin-top: 50px;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f9;
+        }
+        .btn-search {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .btn-search:hover {
+            background-color: #0056b3;
+        }
+        .medicine-image {
+            display: block;
+            margin: auto;
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>{{ medicine.medicine_name }}</h1>
+        <h2>Medicine Details</h2>
+        
+        <img class="medicine-image" src="{{ medicine.image_url }}" alt="{{ medicine.medicine_name }}">
+        <table>
+            <tr>
+                <th>Medicine Name</th>
+                <td>{{ medicine.medicine_name }}</td>
+            </tr>
+            <tr>
+                <th>Active Ingredient</th>
+                <td>{{ medicine.active_ingredient }}</td>
+            </tr>
+            <tr>
+                <th>Alternatives</th>
+                <td>
+                    <ul>
+                        {% for alternative in medicine.alternatives_list %}
+                            <li>{{ alternative }}</li>
+                        {% endfor %}
+                    </ul>
+                </td>
+            </tr>
+            <tr>
+                <th>Pharmacology</th>
+                <td>
+                    <ul>
+                        {% for info in medicine.pharmacology_list %}
+                            {{ info }}
+                        {% endfor %}
+                    </ul>
+                </td>
+            </tr>
+        </table>
+        <a href="{% url 'search_medicine' %}" class="btn-search">Search another medicine</a>
+    </div>
+</body>
+</html>
