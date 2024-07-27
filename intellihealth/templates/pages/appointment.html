@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Appointment</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        select {
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        input[type="submit"] {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+        .qr-code {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .qr-code img {
+            max-width: 90%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Book Appointment</h1>
+    <form id="appointmentForm" method="post">
+        {% csrf_token %}
+        <label for="speciality">Select Speciality</label>
+        <select id="speciality" name="speciality" required>
+            <!-- Options for speciality will be dynamically populated here -->
+            <option value="">Select Specialty</option>
+            <option value="Dental">Dental</option>
+            <option value="Plastic Surgery">Plastic Surgery</option>
+            <option value="Cardiology">Cardiology</option>
+            <option value="Orthopedist">Orthopedist</option>
+            <option value="General Surgery">General Surgery</option>
+            <option value="Dermatology & Andrology">Dermatology & Andrology</option>
+            <option value="Allergy and Immunology">Allergy and Immunology</option>
+            <option value="Genetics and Genomics">Genetics and Genomics</option>
+            <option value="Family medicine">Family medicine</option>
+            <option value="Surgery">Surgery</option>
+            <option value="Neurosurgery">Neurosurgery</option>
+            <option value="Gynocology">Gynocology</option>
+            <option value="Otorhinolaryngology">Otorhinolaryngology</option>
+            <option value="Urology">Urology</option>
+            <option value="Clinical Oncology and Nuclear Medicine">Clinical Oncology and Nuclear Medicine</option>
+            <option value="Ophthalmology">Ophthalmology</option>
+            <option value="Anaesthesia & Surgical Intensive Care">Anaesthesia & Surgical Intensive Care</option>
+            <option value="Neurology & Psychiatry">Neurology & Psychiatry</option>
+        </select>
+        
+        <label for="doctor">Select Doctor</label>
+        <select id="doctor" name="doctor" required disabled>
+            <option value="">Select Doctor</option>
+            {% for doctor in doctors %}
+                <option value="{{ doctor.id }}">{{ doctor.name }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="day">Select Day</label>
+        <select id="day" name="day" required disabled>
+            <!-- Options for days will be dynamically populated here -->
+            <option value="">Select Day</option>
+        </select>
+
+        <label for="date">Select Date</label>
+        <select id="date" name="date" required disabled>
+            <!-- Options for time will be dynamically populated here -->
+            <option value="">Select Date</option>
+        </select>
+
+        <label for="time">Select Time</label>
+        <select id="time" name="time" required disabled>
+            <!-- Options for time will be dynamically populated here -->
+            <option value="">Select Time</option>
+        </select>
+
+        <input type="submit" value="Book Appointment" id="submitBtn" >
+    </form>
+    <div class="qr-code" id="qrCodeContainer">
+        <h2>Scan the QR Code to Save the Appointment</h2>
+        <img id="qrCodeImage" src="" alt="QR Code">
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#speciality').change(function() {
+            var selectedSpeciality = $(this).val();
+            if(selectedSpeciality !== '') {
+                // Send AJAX request to fetch doctors based on selected speciality
+                $.ajax({
+                    url: '/get_doctors/',  // Replace with the URL of your Django view
+                    type: 'GET',
+                    data: {
+                        'speciality': selectedSpeciality
+                    },
+                    success: function(response) {
+                        console.log('Doctors received:', response.doctors); // Add this line for debugging
+                        // Clear existing options and populate with fetched doctors
+                        $('#doctor').empty().prop('disabled', false);
+                        $('#doctor').append($('<option>', {
+                            value: '',
+                            text: 'Select Doctor'
+                        }));
+                        $.each(response.doctors, function(index, doctor) {
+                            $('#doctor').append($('<option>', {
+                                value: doctor.id,
+                                text: doctor.name
+                            }));
+                        });
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error);
+                    }
+                });
+            }
+        });
+
+        $('#doctor').change(function() {
+            var selectedDoctor = $(this).val();
+            var selectedSpeciality = $('#speciality').val();
+            if (selectedDoctor !== '') {
+                // Send AJAX request to fetch available days based on selected doctor and speciality
+                $.ajax({
+                    url: '/get_available_days/',  // Replace with the URL of your Django view
+                    type: 'GET',
+                    data: {
+                        'doctor_id': selectedDoctor,
+                        'speciality': selectedSpeciality
+                    },
+                    success: function(response) {
+                        console.log('Available days received:', response.days); // Add this line for debugging
+                        // Clear existing options and populate with fetched days
+                        $('#day').empty().prop('disabled', false);
+                        $('#day').append($('<option>', {
+                            value: '',
+                            text: 'Select Day'
+                        }));
+                        $.each(response.days, function(index, day) {
+                            console.log(day); // Add this line for debugging
+                            $('#day').append($('<option>', {
+                                value: day,
+                                text: day
+                            }));
+                        });
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error);
+                    }
+                });
+            }
+        });
+
+        $('#day').change(function() {
+            var selectedDoctor = $('#doctor').val();
+            var selectedSpeciality = $('#speciality').val();
+            var selectedDay = $(this).val();
+            if (selectedDoctor !== '' && selectedDay !== '') {
+                // Send AJAX request to fetch available dates based on selected doctor, speciality, and day
+                $.ajax({
+                    url: '/get_available_dates/',  // URL of your Django view to get available dates
+                    type: 'GET',
+                    data: {
+                        'doctor_id': selectedDoctor,
+                        'speciality': selectedSpeciality,
+                        'day': selectedDay
+                    },
+                    success: function(response) {
+                        console.log('Available dates received:', response.dates);
+                        // Clear existing options and populate with fetched dates
+                        $('#date').empty().prop('disabled', false);
+                        $('#date').append($('<option>', {
+                            value: '',
+                            text: 'Select Date'
+                        }));
+                        $.each(response.dates, function(index, date) {
+                            $('#date').append($('<option>', {
+                                value: date,
+                                text: date
+                            }));
+                        });
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error);
+                    }
+                });
+            }
+        });
+
+        $('#date').change(function() {
+            var selectedDoctor = $('#doctor').val();
+            var selectedSpeciality = $('#speciality').val();
+            var selectedDay = $('#day').val();
+            var selectedDate = $(this).val();
+            if (selectedDoctor !== '' && selectedDay !== '' && selectedDate !== '') {
+                // Send AJAX request to fetch available times based on selected doctor, speciality, day, and date
+                $.ajax({
+                    url: '/get_availabe_times/',  // URL of your Django view to get available times
+                    type: 'GET',
+                    data: {
+                        'doctor_id': selectedDoctor,
+                        'speciality': selectedSpeciality,
+                        'day': selectedDay,
+                        'date': selectedDate
+                    },
+                    success: function(response) {
+                        console.log('Available times received:', response.times);
+                        // Clear existing options and populate with fetched times
+                        $('#time').empty().prop('disabled', false);
+                        $('#time').append($('<option>', {
+                            value: '',
+                            text: 'Select Time'
+                        }));
+                        $.each(response.times, function(index, time) {
+                            $('#time').append($('<option>', {
+                                value: time,
+                                text: time
+                            }));
+                        });
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error);
+                    }
+                });
+            }
+        });
+
+        $('#submitBtn').click(function(event) {
+            console.log('Button clicked');
+            event.preventDefault();
+
+            var speciality = $('#speciality').val();
+            var doctor = $('#doctor').val();
+            var day = $('#day').val();
+            var date = $('#date').val();
+            var time = $('#time').val();
+            console.log(doctor)
+            // Send AJAX request to create a new appointment
+            $.ajax({
+                url: '/create_appointment/',
+                type: 'POST',
+                headers: {
+                    'X-CSRFToken': $('[name="csrfmiddlewaretoken"]').val()
+                },
+                data: {
+                    'speciality': speciality,
+                    'doctor_id': doctor,  // Use 'doctor_id' instead of 'doctor'
+                    'day': day,
+                    'date': date,
+                    'time': time
+                },
+                success: function(response) {
+                    // Handle success response
+                    alert('Appointment booked successfully!');
+                    // Display QR code
+                    if (response.qr_code_url) {
+                        $('#qrCodeContainer').show();
+                        $('#qrCodeImage').attr('src', response.qr_code_url);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    // Handle error response
+                    alert('Error already Registered.');
+                    console.error('Error:', error);
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>

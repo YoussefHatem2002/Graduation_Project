@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Signup</title>
+</head>
+<body>
+    <h2>User Signup</h2>
+    {% block content %}
+    <form method="post" action="{% url 'create_patient' %}">
+        {% csrf_token %}
+        <label for="fname">First Name:</label><br>
+        <input type="text" id="fname" name="fname" required><br>
+        
+        <label for="lname">Last Name:</label><br>
+        <input type="text" id="lname" name="lname" required><br>
+        
+        <label for="age">Age:</label><br>
+        <input type="number" id="age" name="age" required><br>
+        
+        <label for="b_date">Birth Date:</label><br>
+        <input type="date" id="b_date" name="b_date" required><br>
+        
+        <label for="serial_no">Serial Number:</label><br>
+        <input type="text" id="serial_no" name="serial_no" required><br>
+        
+        <label for="password">Password:</label><br>
+        <input type="password" id="password" name="password" required><br>
+        
+        <label for="disease">Disease:</label><br>
+        <input type="text" id="disease" name="disease" required><br>
+        
+        <label for="phone">Phone:</label><br>
+        <input type="tel" id="phone" name="phone" required><br>
+        
+        <label for="blood_type">Blood Type:</label><br>
+        <input type="text" id="blood_type" name="blood_type" required><br>
+        
+        <label for="image">Profile Image:</label><br>
+        <input type="file" id="image" name="image" accept="image/*" required><br><br>
+        
+        <input type="submit" value="Sign Up">
+    </form>
+    {%  endblock %}
+</body>
+</html>

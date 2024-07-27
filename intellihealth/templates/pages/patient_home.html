@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IntelliHealth - Patient Portal</title>
+  <!-- Add FontAwesome CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f8ff; /* Light Blue */
+    }
+    header {
+      background-color: #007bff; /* Blue */
+      color: #fff;
+      padding: 10px;
+      text-align: center;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: fixed;
+      width: calc(100% - 0px); /* Adjusted width */
+      top: 0;
+      z-index: 1000; /* Ensures header is above other elements */
+    }
+    h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+    }
+    .user-info img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+    .user-info a {
+      color: #fff;
+      text-decoration: none;
+      margin-right: 30px;
+    }
+    .user-info a.bell-icon {
+      margin-left: 0;
+      font-size: 24px;
+    }
+    .notifications {
+      position: absolute;
+      top: calc(100% + 5px);
+      right: 0;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      width: 200px;
+      max-height: 200px;
+      overflow-y: auto;
+      display: none;
+    }
+    .notifications-item {
+      padding: 10px;
+    }
+    .user-menu {
+      position: relative;
+      cursor: pointer;
+    }
+    .user-dropdown {
+      position: absolute;
+      top: calc(100% + 5px);
+      right: 0;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      width: 150px;
+      display: none;
+    }
+    .user-dropdown a {
+      display: block;
+      padding: 10px;
+      text-decoration: none;
+      color: #333;
+    }
+    .user-dropdown a:hover {
+      background-color: #f0f0f0;
+    }
+    nav {
+      background-color: #007bff; /* Blue */
+      color: #fff;
+      padding: 10px;
+      text-align: left;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+      width: 200px;
+      position: fixed;
+      top: 60px;
+      bottom: 0;
+    }
+    nav ul {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+    }
+    nav ul li {
+      display: block;
+      margin-bottom: 10px;
+    }
+    nav ul li a {
+  color: #fff;
+  text-decoration: none;
+  padding: 10px;
+  display: flex; /* Added */
+  align-items: center; /* Added */
+}
+
+nav ul li a:hover {
+  background-color: #0056b3; /* Darker Blue */
+}
+
+nav ul li a i {
+  margin-right: 10px; /* Added */
+}
+    main {
+      margin-left: 220px; /* Adjust based on nav width */
+      margin-top: 80px; /* Adjust based on header height */
+      padding: 20px;
+    }
+    iframe {
+      width: 100%;
+      height: 600px;
+      border: none;
+      background-color: #fff;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+      border-radius: 5px;
+    }
+
+    .active-button {
+      background-color: #0056b3;
+      box-shadow: inset 0px 0px 5px rgba(0, 0, 0, 0.5); 
+    }
+  </style>
+  
+</head>
+<body>
+
+<header>
+  <h1>IntelliHealth</h1>
+  <div class="user-info">
+    <img src="{{ image.url }}" alt="User Image">
+    <div class="user-menu" onclick="toggleUserDropdown()">
+      <span>Welcome, {{ user_name }}</span>
+      <div class="user-dropdown" id="userDropdown">
+        <a href="{% url 'profile_patient_edit'  %}"><i class=""></i> Edit Profile</a>
+        <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+      </div>
+      <i class="fas fa-chevron-down"></i>
+    </div>
+    &nbsp;&nbsp;
+    
+    
+  </div>
+  
+</header>
+
+<nav>
+  <ul>
+    <br><br>
+    <li><a href="{% url 'my_appointments' %}" target="items" onclick="toggleActive(this)"><i class="fas fa-calendar-alt"></i> My Appointments</a></li>
+    <br>
+    <li><a href="{% url 'medical_profile' %}" target="items" onclick="toggleActive(this)"><i class="fas fa-user"></i> View Medical Profile</a></li>
+    <br>
+    <li><a href="{% url 'lab_mainpage' %}" onclick="toggleActive(this)" target="items" ><i class="fas fa-flask"></i> Lab Results</a></li>
+    <br>
+    <li><a href="{% url 'hospital_page' %}" target="items" onclick="toggleActive(this)"><i class="fas fa-calendar-plus"></i> Book Appointment</a></li>
+    <br>
+    <li><a href="{% url 'search_medicine' %}" target="items" onclick="toggleActive(this)" ><i class="fas fa-search"></i> Search for Medicine & Alternatives</a></li>
+    <br>
+    <li><a href="{% url 'upload_image' %}" target="items" onclick="toggleActive(this)"><i class="fas fa-microscope"></i> Tumor Detection AI</a></li>
+
+  </ul>
+</nav>
+
+<main>
+  <iframe id="contentFrame" src="" frameborder="0" name="items"></iframe>
+</main>
+
+<!-- Add FontAwesome JavaScript (Optional, for advanced icon features) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+    const iframe = document.getElementByName('items');  // Replace with your iframe ID or reference
+
+    iframe.onload = function() {
+        // Iframe loaded successfully
+        console.log('Iframe loaded successfully.');
+    };
+
+    iframe.onerror = function() {
+        // Iframe encountered an error (like X-Frame-Options denial)
+        console.log('Iframe encountered an error.');
+
+        // Refresh the entire tab/window
+        window.location.reload();
+    };
+});
+  function loadPage(url) {
+    document.getElementById('contentFrame').src = url;
+  }
+
+  
+
+
+  function toggleNotifications(event) {
+    event.preventDefault();
+    var notifications = document.getElementById('notifications');
+    notifications.style.display = notifications.style.display === 'block' ? 'none' : 'block';
+  }
+
+  function toggleUserDropdown() {
+    var userDropdown = document.getElementById('userDropdown');
+    userDropdown.style.display = userDropdown.style.display === 'block' ? 'none' : 'block';
+  }
+
+  function toggleActive(element) {
+    // Remove active class from all links
+    var links = document.querySelectorAll('nav a');
+    links.forEach(function(link) {
+      link.classList.remove('active-button');
+    });
+    // Add active class to the clicked link
+    element.classList.add('active-button');
+  }
+</script>
+
+</body>
+</html>
