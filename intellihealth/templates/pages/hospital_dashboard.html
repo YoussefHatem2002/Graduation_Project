@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <title>Hospital Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: white;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            background-color: #007bff;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .hospital-name {
+            padding: 10px;
+            color: white;
+        }
+
+        .user-info {
+            padding: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .user-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .user-info a {
+            color: #fff;
+            text-decoration: none;
+            margin-right: 30px;
+        }
+
+        .user-info a.bell-icon {
+            margin-left: 0;
+            font-size: 24px;
+        }
+
+        .notifications {
+            position: absolute;
+            top: calc(100% + 5px);
+            right: 0;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 200px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .notifications-item {
+            padding: 10px;
+        }
+
+        .user-menu {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .user-dropdown {
+            position: absolute;
+            top: calc(100% + 5px);
+            right: 0;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 150px;
+            display: none;
+        }
+
+        .user-dropdown a {
+            display: block;
+            padding: 10px;
+            text-decoration: none;
+            color: #333;
+        }
+
+        .user-dropdown a:hover {
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            margin: 20px auto;
+            max-width: 800px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #007bff;
+            margin-top: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .button:hover {
+            background-color: #0056b3;
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+        }
+
+        .form-group input[type="text"], 
+        .form-group input[type="email"], 
+        .form-group select,
+        .form-group input[type="time"],
+        .form-group input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            box-sizing: border-box;
+        }
+
+        .form-group small {
+            color: #999;
+        }
+
+        .cancel-edit {
+            background-color: #dc3545;
+        }
+
+        .cancel-edit:hover {
+            background-color: #c82333;
+        }
+
+        .edit-button:hover, 
+        .button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.button:hover {
+    background-color: #0056b3;
+}
+
+.delete-doctor {
+    background-color: #dc3545; /* Red background for delete button */
+}
+
+.delete-doctor:hover {
+    background-color: #c82333; /* Darker red on hover */
+}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="hospital-name">
+            <h1>IntelliHealth</h1>
+        </div>
+        <div class="user-info">
+            <img src="{{ image.url }}" alt="User Image">
+            <div class="user-menu" onclick="toggleUserDropdown()">
+                <span>Welcome, {{ user_name }}</span>
+                <div class="user-dropdown" id="userDropdown">
+                    <a href="#"><i class=""></i> Edit Profile</a>
+                    <a href="{% url 'org_logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <h2>All Appointments</h2>
+        <table id="appointments-table">
+            <thead>
+                <tr>
+                    <th>Doctor</th>
+                    <th>Patient</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for appointment in appointments %}
+                <tr>
+                    <td>{{ appointment.doctor_id.name }}</td>
+                    <td>{{ appointment.patient_id.name }}</td>
+                    <td>{{ appointment.date }}</td>
+                    <td>{{ appointment.availability_id.start_time }} - {{ appointment.availability_id.end_time }}</td>
+                    <td>
+                        <!-- Add actions buttons here -->
+                        <a href="{% url 'delete_appointment' appointment.id %}" class="button delete-doctor"><i class="fas fa-trash"></i> Delete</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5">No appointments found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="container">
+        <h2>Doctors Availability</h2>
+        <!-- Doctors availability table -->
+        <table id="doctors-table">
+            <thead>
+                <tr>
+                    <th>Doctor</th>
+                    <th>Specialty</th>
+                    <th>Available Days</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doctor in doctors %}
+                <tr data-doctor-id="{{ doctor.id }}">
+                    <td>{{ doctor.name }}</td>
+                    <td>{{ doctor.specialty }}</td>
+                    <td>{{ doctor.availability }}</td>
+                    <td>{{ doctor.start_time }}</td>
+                    <td>{{ doctor.end_time }}</td>
+                    <td>
+                        <button class="button edit-doctor">Edit</button>
+                        <button class="button delete-doctor">Delete</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Edit Doctor Form -->
+        <form id="edit-doctor-form" action="{% url 'edit_doctor' %}" method="post" style="display: none;">
+            {% csrf_token %}
+            <input type="hidden" id="edit-doctor-id" name="doctor_id">
+            <div class="form-group">
+                <label for="edit-doctor-name">Doctor Name:</label>
+                <input type="text" id="edit-doctor-name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="edit-doctor-specialty">Specialty:</label>
+                <select id="edit-doctor-specialty" name="specialty" required>
+                    <option value="">Select Specialty</option>
+                    <option value="Dental">Dental</option>
+                    <option value="Plastic Surgery">Plastic Surgery</option>
+                    <option value="Cardiology">Cardiology</option>
+                    <option value="Orthopedist">Orthopedist</option>
+                    <option value="General Surgery">General Surgery</option>
+                    <option value="Dermatology & Andrology">Dermatology & Andrology</option>
+                    <option value="Allergy and Immunology">Allergy and Immunology</option>
+                    <option value="Genetics and Genomics">Genetics and Genomics</option>
+                    <option value="Family medicine">Family medicine</option>
+                    <option value="Surgery">Surgery</option>
+                    <option value="Neurosurgery">Neurosurgery</option>
+                    <option value="Gynocology">Gynocology</option>
+                    <option value="Otorhinolaryngology">Otorhinolaryngology</option>
+                    <option value="Urology">Urology</option>
+                    <option value="Clinical Oncology and Nuclear Medicine">Clinical Oncology and Nuclear Medicine</option>
+                    <option value="Ophthalmology">Ophthalmology</option>
+                    <option value="Anaesthesia & Surgical Intensive Care">Anaesthesia & Surgical Intensive Care</option>
+                    <option value="Neurology & Psychiatry">Neurology & Psychiatry</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="edit-doctor-availability">Availability Days:</label>
+                <input type="text" id="edit-doctor-availability" name="availability" required>
+                <small>(e.g., Monday, Wednesday, Friday)</small>
+            </div>
+            <div class="form-group">
+                <label for="edit-doctor-start">Start Time:</label>
+                <input type="time" id="edit-doctor-start" name="start_time" required>
+            </div>
+            <div class="form-group">
+                <label for="edit-doctor-end">End Time:</label>
+                <input type="time" id="edit-doctor-end" name="end_time" required>
+            </div>
+            <div class="form-group">
+                <label for="edit-doctor-interval">Interval Between Every Appointment (minutes):</label>
+                <input type="number" id="edit-doctor-interval" name="interval" required>
+            </div>
+            <input type="submit" class="button" value="Save Changes">
+            <button type="button" id="cancel-edit" class="button cancel-edit">Cancel</button>
+        </form>
+
+        <a href="#" id="toggle-doctor-form" class="button">Add Doctor Availability</a>
+        <br><br>
+
+        <div id="doctor-form" style="display: none;">
+            <h2>Add Doctor</h2>
+            <!-- Add Doctor form -->
+            <form action="{% url 'add_doctor' %}" method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="doctor-name">Doctor Name:</label>
+                    <input type="text" id="doctor-name" name="doctor-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="doctor-specialty">Specialty:</label>
+                    <select id="doctor-specialty" name="doctor-specialty" required>
+                    <option value="">Select Specialty</option>
+                    <option value="Dental">Dental</option>
+                    <option value="Plastic Surgery">Plastic Surgery</option>
+                    <option value="Cardiology">Cardiology</option>
+                    <option value="Orthopedist">Orthopedist</option>
+                    <option value="General Surgery">General Surgery</option>
+                    <option value="Dermatology & Andrology">Dermatology & Andrology</option>
+                    <option value="Allergy and Immunology">Allergy and Immunology</option>
+                    <option value="Genetics and Genomics">Genetics and Genomics</option>
+                    <option value="Family medicine">Family medicine</option>
+                    <option value="Surgery">Surgery</option>
+                    <option value="Neurosurgery">Neurosurgery</option>
+                    <option value="Gynocology">Gynocology</option>
+                    <option value="Otorhinolaryngology">Otorhinolaryngology</option>
+                    <option value="Urology">Urology</option>
+                    <option value="Clinical Oncology and Nuclear Medicine">Clinical Oncology and Nuclear Medicine</option>
+                    <option value="Ophthalmology">Ophthalmology</option>
+                    <option value="Anaesthesia & Surgical Intensive Care">Anaesthesia & Surgical Intensive Care</option>
+                    <option value="Neurology & Psychiatry">Neurology & Psychiatry</option>
+                        <!-- Add more options as needed -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="doctor-availability">Availability Days:</label>
+                    <div>
+                        <input type="checkbox" id="availability-monday" name="doctor-availability[]" value="Saturday">
+                        <label for="availability-saturday">Saturday</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="availability-monday" name="doctor-availability[]" value="Sunday">
+                        <label for="availability-monday">Sunday</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="availability-monday" name="doctor-availability[]" value="Monday">
+                        <label for="availability-monday">Monday</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="availability-tuesday" name="doctor-availability[]" value="Tuesday">
+                        <label for="availability-tuesday">Tuesday</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="availability-wednesday" name="doctor-availability[]" value="Wednesday">
+                        <label for="availability-wednesday">Wednesday</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="availability-thursday" name="doctor-availability[]" value="Thursday">
+                        <label for="availability-thursday">Thursday</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="availability-friday" name="doctor-availability[]" value="Friday">
+                        <label for="availability-friday">Friday</label>
+                    </div>
+                    <small>(Select days, separated by commas)</small>
+                
+                </div>
+                <div class="form-group">
+                    <label for="doctor-start">Start Time:</label>
+                    <input type="time" id="doctor-start" name="doctor-start" required>
+                </div>
+                <div class="form-group">
+                    <label for="doctor-end">End Time:</label>
+                    <input type="time" id="doctor-end" name="doctor-end" required>
+                </div>
+                <div class="form-group">
+                    <label for="doctor-interval">Interval Between Every Appointment (minutes):</label>
+                    <input type="number" id="doctor-interval" name="doctor-interval" required>
+                </div>
+                <div class="form-group">
+                    <label for="doctor-email">Email:</label>
+                    <input type="email" id="doctor-email" name="doctor-email" required>
+                </div>
+                <input type="submit" class="button" value="Add Doctor">
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Toggle visibility of Add Doctor form
+        document.getElementById('toggle-doctor-form').addEventListener('click', function() {
+            var doctorForm = document.getElementById('doctor-form');
+            if (doctorForm.style.display === 'none') {
+                doctorForm.style.display = 'block';
+            } else {
+                doctorForm.style.display = 'none';
+            }
+        });
+
+        // Toggle visibility of User Dropdown
+        function toggleUserDropdown() {
+            var userDropdown = document.getElementById('userDropdown');
+            userDropdown.style.display = userDropdown.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Cancel edit and hide edit form
+        document.getElementById('cancel-edit').addEventListener('click', function() {
+            document.getElementById('edit-doctor-form').style.display = 'none';
+        });
+
+        // Show edit form when clicking Edit button in the table
+        var editButtons = document.querySelectorAll('.edit-doctor');
+        editButtons.forEach(function(button) {
+            button.addEventListener('click', function() {
+                var tr = this.closest('tr');
+                var doctorId = tr.getAttribute('data-doctor-id');
+                var doctorName = tr.children[0].innerText;
+                var doctorSpecialty = tr.children[1].innerText;
+                var doctorAvailability = tr.children[2].innerText;
+                var startTime = tr.children[3].innerText;
+                var endTime = tr.children[4].innerText;
+
+                // Fill edit form with current data
+                document.getElementById('edit-doctor-id').value = doctorId;
+                document.getElementById('edit-doctor-name').value = doctorName;
+                document.getElementById('edit-doctor-specialty').value = doctorSpecialty;
+                document.getElementById('edit-doctor-availability').value = doctorAvailability;
+                document.getElementById('edit-doctor-start').value = startTime;
+                document.getElementById('edit-doctor-end').value = endTime;
+
+                // Display edit form
+                document.getElementById('edit-doctor-form').style.display = 'block';
+            });
+        });
+
+        var deleteButtons = document.querySelectorAll('.delete-doctor');
+        deleteButtons.forEach(function(button) {
+            button.addEventListener('click', function() {
+                var tr = this.closest('tr');
+                var doctorId = tr.getAttribute('data-doctor-id');
+
+                // Confirm deletion
+                if (confirm('Are you sure you want to delete this doctor?')) {
+                    // Perform deletion (AJAX or form submission)
+                    var deleteForm = document.createElement('form');
+                    deleteForm.action = '/delete_doctor/' + doctorId + '/';
+                    deleteForm.method = 'POST';
+                    deleteForm.style.display = 'none';
+                    var csrfToken = document.getElementsByName('csrfmiddlewaretoken')[0].value;
+                    deleteForm.innerHTML = '<input type="hidden" name="csrfmiddlewaretoken" value="' + csrfToken + '">';
+                    document.body.appendChild(deleteForm);
+                    deleteForm.submit();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
